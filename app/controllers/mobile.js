@@ -102,7 +102,17 @@
               downloadAndExtractTarball(key, stack, stack.repo, branch, function(){
 
                 // Call the build script for this target.
-                stack.mobile.build(key, cb);
+                stack.mobile.build(key, function(){
+
+                  // Completely delete the temp folder we used.
+                  fs.remove(tmp, function(){
+
+                    // All done building this target.
+                    return cb();
+
+                  });
+
+                });
 
               });
             });

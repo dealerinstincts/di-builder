@@ -1,0 +1,41 @@
+/**
+ * ui.less
+ * Main Dealer Instincts build system stylesheet.
+ * 
+ * @author  Jason Valdron <jason@dealerinstincts.com>
+ * @package di-builder
+ */
+
+@import 'vendors/font-awesome.less';
+@import 'vendors/bootstrap.less';
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+body {
+  padding-top: 70px; 
+  margin-bottom: 60px;
+}
+small {
+  color: #999;
+  display: block;
+}
+#footer {
+  background-color: #f5f5f5;
+  bottom: 0;
+  height: 40px;
+  margin: 0;
+  position: absolute;
+  width: 100%;
+}
+.panel-footer small {
+  padding: 0 120px 15px 0;
+  position: relative;
+  top: 7px;
+}
+.panel-footer button {
+  position: relative;
+  z-index: 1;
+}
+#actions span.fa + small { padding-left: 23px; }

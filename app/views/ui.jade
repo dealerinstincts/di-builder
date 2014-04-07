@@ -1,0 +1,125 @@
+doctype html
+html(lang='en')
+  head
+    title Dealer Instincts Build System
+    link(href='css/ui.css', rel='stylesheet')
+
+  body
+    nav.navbar-default.navbar-fixed-top.navbar-inverse
+      .container
+        p.navbar-text Dealer Instincts Build System
+
+    .container
+
+      .col-xs-12.col-md-5.pull-right
+        form.panel.panel-default(name='deployment', action='/deploy', method='post')
+          .panel-heading
+            span.fa.fa-icon-only.fa-fw.fa-cloud-upload
+            |  Deploy a new version
+          .panel-body
+            | Choose a version below (only 5 most recent) to be deployed automatically:
+
+          .list-group
+            each tag, i in tags
+              label.list-group-item(for='tag-' + i) 
+                input(id='tag-' + i, type='radio', name='version', value=tag.name, checked=i === 0 ? 'checked' : null)
+                |  #{tag.name}
+            label.list-group-item(for='master') 
+              input#master(type='radio', name='version', value='master')
+              |  master
+
+          .panel-body
+            | Choose at which time of day (local time) it should be deployed:
+
+          .list-group
+            label.list-group-item(for='2am') 
+              input#2am(type='radio', name='time', value='2am', checked)
+              |  2 AM
+            label.list-group-item(for='4am') 
+              input#4am(type='radio', name='time', value='4am')
+              |  4 AM
+            label.list-group-item(for='now') 
+              input#now(type='radio', name='time', value='now')
+              |  Now
+
+          .panel-body
+            label(for='build-mobile') 
+              input#build-mobile(type='checkbox', name='build-mobile', value='1', checked)
+              |  Build mobile version
+
+            hr
+
+            p On failure, all stacks will be reverted to the previous version.
+
+          .panel-footer
+            button.btn.btn-success.pull-right(type='submit')
+              span.fa.fa-icon-only.fa-fw.fa-cloud-upload
+              |  Submit
+            .clearfix
+
+      #actions.col-xs-12.col-md-7.pull-left
+        .panel.panel-default
+          .panel-heading
+            span.fa.fa-icon-only.fa-fw.fa-cogs
+            |  Current Actions
+          ul.list-group
+
+      .col-xs-12.col-md-7.pull-left
+        .panel.panel-default
+          .panel-heading
+            span.fa.fa-icon-only.fa-fw.fa-tasks
+            |  Stacks
+          .panel-body
+            | Below you will find the the managed stacks and their status for their last deployment. You can click on them to see their last deployment's log.
+          if stacks && stacks.length
+            .list-group
+              each stack in stacks
+                a.list-group-item(href='#')
+                  | #{stack.name}
+                  if stack.deployments && stack.deployments.length
+                    if stack.deployments[0].Status === 'running' 
+                      span.fa.fa-icon-only.fa-fw.fa-spinner.fa-spin.pull-right
+                    else
+                      span.label.pull-right(class=stack.deployments[0].Status === 'successful' ? 'label-success' : 'label-danger')
+                        span.fa.fa-icon-only.fa-fw(class=stack.deployments[0].Status === 'successful' ? 'fa-check' : 'fa-times')
+                        if stack.deployments[0].Status === 'successful'
+                          |  Success
+                        else
+                          |  Error
+          else
+            .panel-body
+              .label.label-danger No stacks defined
+
+      .col-xs-12.col-md-7.pull-left
+        form.panel.panel-default(name='mobile', action='/mobile/build', method='post')
+          .panel-heading
+            span.fa.fa-icon-only.fa-fw.fa-mobile
+            |  Mobile Builds
+          .panel-body
+            | Below are the 
+            strong 10 most recent 
+            | mobile builds from mobile enabled repositories.
+          if mobileBuilds && mobileBuilds.length
+            .list-group
+              each build in mobileBuilds
+                a.list-group-item(href='#')
+                  | #{build.name}
+          else
+            .panel-body
+              .label.label-warning No mobile builds
+          .panel-footer
+            button.btn.btn-default.pull-right(type='submit')
+              span.fa.fa-icon-only.fa-fw.fa-cog
+              |  Build Now
+            small
+              | Building all mobile enabled repositories will create APKs from the 
+              strong master 
+              | branch.
+            .clearfix
+
+    #footer.navbar
+      .container
+        small.navbar-text Copyright &copy; 2014 - Dealer Instincts. For internal use only.
+
+    script(type='text/javascript', src='js/vendors/jquery.js')
+    script(type='text/javascript', src='js/ui.js')

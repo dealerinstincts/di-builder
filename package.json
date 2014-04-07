@@ -1,0 +1,37 @@
+{
+  "name": "di-builder",
+  "version": "1.0.0",
+  "author": "Jason Valdron <jason@dealerinstincts.com>",
+  "description": "Build server for DealerInstincts. Builds mobile apps and then deploy to production at 2am.",
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/dealerinstincts/rr-api.git"
+  },
+  "dependencies": {
+    "async": "0.x",
+    "aws-sdk": "2.x",
+    "basic-auth-connect": "1.x",
+    "compression": "1.x",
+    "express": "4.x",
+    "fs-extra": "0.x",
+    "jade": "1.x",
+    "less-middleware": "0.1.x",
+    "github": "0.1.x",
+    "node-schedule": "0.1.x",
+    "request": "2.x",
+    "request-progress": "0.x",
+    "serve-static": "1.x",
+    "tar": "0.1.x",
+    "tar.gz": "0.1.x",
+    "walk": "2.x",
+    "winston": "0.7.x",
+    "winston-email": "0.x"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": "0.10.x",
+    "npm": "1.2.x"
+  }
+}

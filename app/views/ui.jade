@@ -71,15 +71,18 @@ html(lang='en')
                 |  Submit
               .clearfix
 
-      #actions.col-xs-12.col-md-7.pull-left
-        .panel.panel-default
-          .panel-heading
-            span.fa.fa-icon-only.fa-fw.fa-cogs
-            |  Current Actions
-            a#clear-actions.btn.btn-primary.btn-xs.pull-right(href='#')
-              span.fa.fa-icon-only.fa-fw.fa-times
-              |  Clear completed actions
-          ul.list-group
+      .col-xs-12.col-md-7.pull-left
+        #actions-loading.loading
+          .loader
+            span.fa.fa-icon-only.fa-fw.fa-spinner.fa-spin
+          .panel.panel-default
+            .panel-heading
+              span.fa.fa-icon-only.fa-fw.fa-cogs
+              |  Current Actions
+              a#clear-actions.btn.btn-primary.btn-xs.pull-right(href='#')
+                span.fa.fa-icon-only.fa-fw.fa-times
+                |  Clear completed actions
+            ul#actions.list-group
 
       .col-xs-12.col-md-7.pull-left
         #stacks-loading.loading
@@ -131,8 +134,10 @@ html(lang='en')
                 tr
                   th Stack
                   th Branch
+                  th.text-center Version
                   th Created At
-                  th
+                  th.text-center
+                    span.fa.fa-icon-only.fa-fw.fa-download
               tbody
             .panel-body.empty
               .label.label-warning No mobile builds

@@ -12,7 +12,7 @@
 
   $(document).ready(function(){
 
-    $('#actions').hide();
+    $('#actions').parents('.col-xs-12').hide();
 
     // Function to refresh the actions list.
     var refreshActions = function(){
@@ -21,7 +21,7 @@
       $.getJSON('/actions', function(actions){
         
         // Remove existing actions.
-        $('#actions .list-group').empty();
+        $('#actions').empty();
 
         // Create elements for all of our sections.
         $.each(actions, function(){
@@ -44,12 +44,14 @@
           if (this.description) action.append($('<small />').text(this.description));
 
           // Finally, add the element to the actions list.
-          $('#actions .list-group').append(action);
+          $('#actions').append(action);
 
         });
 
         // Now show/hide our actions.
-        $('#actions')[actions && actions.length ? 'show' : 'hide']();
+        $('#actions').parents('.col-xs-12')[actions && actions.length ? 'show' : 'hide']();
+
+        $('#actions-loading').removeClass('loading');
 
       });
 
@@ -110,7 +112,7 @@
           var deployment = $('<tr />');
 
           // Add all the fields.
-          deployment.append($('<td />').text(this.stacks.join(', ')))
+          deployment.append($('<td />').text(this.stacks ? this.stacks.join(', ') : 'None'))
                .append($('<td />').text(this.branch))
                .append($('<td class="text-center" />').append($('<span class="fa fa-icon-only fa-fw fa-' + (this['build-mobile'] ? 'check' : 'times') + '" />')))
                .append($('<td />').text(this.dateTime))
@@ -140,10 +142,11 @@
           // Add all the fields.
           build.append($('<td />').text(this.name))
                .append($('<td />').text(this.branch))
+               .append($('<td class="text-center" />').text(this.versionCode))
                .append($('<td />').text(this.dateTime))
                .append($('<td class="text-center" />').append($('<a />', {
                  href: 'mobile/build/' + this.filename
-               }).append('<span class="fa fa-icon-only fa-fw fa-download text-success"></span>')));
+               }).append('<span class="fa fa-icon-only fa-fw fa-android text-success"></span>')));
 
           // Finally, add the element to the builds list.
           $('#builds').append(build);

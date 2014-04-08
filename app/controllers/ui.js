@@ -70,7 +70,7 @@
             }),
             builds: builds.map(function(build){
 
-                var values = /(.*?)-(.*(?=-))-([0-9].*)\./g.exec(build),
+                var values = /(.*?)-(.*(?=-))-([0-9].*)\.([0-9].*)\./g.exec(build),
                     version = /(v.*)/g.exec(values[2]);
 
                 return {
@@ -79,6 +79,7 @@
                   name: version && version[1] ? values[2].replace('-' + version[1], '') : values[2].substr(0, values[2].lastIndexOf('-')),
                   branch: version && version[1] ? version[1] : values[2].substr(values[2].lastIndexOf('-') + 1),
                   time: values[3],
+                  versionCode: values[4],
                   dateTime: moment.unix(values[3] / 1000).local().format('MMMM Do, YYYY hh:mm A')
                 };
 

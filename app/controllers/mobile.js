@@ -102,10 +102,17 @@
               downloadAndExtractTarball(key, stack, stack.repo, branch, function(){
 
                 // Call the build script for this target.
-                stack.mobile.build(key, function(){
+                stack.mobile.build(key, function(err){
+
+                  if (!err) app.actions[key].description = 'Removing temporary directory';
 
                   // Completely delete the temp folder we used.
                   fs.remove(tmp, function(){
+
+                    if (err) return cb(err);
+
+                    app.actions[key].status = 'completed';
+                    app.actions[key].description = null;
 
                     // All done building this target.
                     return cb();

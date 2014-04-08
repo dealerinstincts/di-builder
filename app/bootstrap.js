@@ -73,13 +73,17 @@
         // Loop through all the configs.
         walk.on('file', function(root, file, next){
 
-            // Remove the extension.
-            var name = file.name.substr(0, file.name.indexOf('.'));
-            
-            // Load the config.
-            app.config[name] = require(root + '/' + file.name)(app);
+            if (~file.name.indexOf('.js')) {
 
-            app.logger.info('- Config %s loaded', file.name);
+                // Remove the extension.
+                var name = file.name.substr(0, file.name.indexOf('.'));
+                
+                // Load the config.
+                app.config[name] = require(root + '/' + file.name)(app);
+
+                app.logger.info('- Config %s loaded', file.name);
+
+            }
 
             next();
 

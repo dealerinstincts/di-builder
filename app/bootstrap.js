@@ -161,6 +161,8 @@
             // Disable caching (fix for IE8).
             app.disable('etag');
 
+            app.use(require('body-parser')());
+
             // Setup gzip compression.
             app.use(require('compression')());
 
@@ -208,6 +210,7 @@
             });
 
             app.actions = {};
+            app.scheduledDeployments = {};
 
             // Done loading the controllers.
             walk.on('end', function(){

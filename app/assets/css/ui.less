@@ -29,6 +29,8 @@ small {
   position: absolute;
   width: 100%;
 }
+.label { padding-top: 3px; }
+.panel-body.empty { padding-top: 0; }
 .panel-footer small {
   padding: 0 120px 15px 0;
   position: relative;
@@ -39,3 +41,52 @@ small {
   z-index: 1;
 }
 #actions span.fa + small { padding-left: 23px; }
+
+.empty { display: none; }
+
+.color-block {
+  display: inline-block;
+  height: 12px;
+  margin-right: 8px;
+  position: relative;
+  top: 1px;
+  width: 12px;
+} 
+
+#stacks-deployment .color-block {
+  margin: 0 4px 0 8px;
+  top: 0;
+
+  & + span {
+    position: relative;
+    top: -1px;
+  }
+}
+
+#stacks { padding-left: 1px; }
+
+#stacks-loading, #builds-loading, #deployments-loading {
+  .loader { display: none; }
+  &.loading {
+    position: relative;
+
+    .loader { 
+      background: rgba(0, 0, 0, 0.1);
+      bottom: 0;
+      display: block;
+      left: 0;
+      position: absolute;
+      right: 0;
+      top: 0;
+      z-index: 100;
+
+      span {
+        font-size: 24px;
+        left: 50%;
+        margin: -12px 0 0 -12px;
+        position: absolute;
+        top: 50%;
+      }
+    }
+  }
+}

@@ -198,6 +198,7 @@
       } else {
         var at = moment().add('days', 1).hours(req.body.time).minutes(0).seconds(0);
         req.body.job = schedule.scheduleJob(at.toDate(), function(){
+          req.body.job.cancel();
           return deploy(req.body);
         });
         req.body.dateTime = at.format('MMMM Do, YYYY hh:mm A');

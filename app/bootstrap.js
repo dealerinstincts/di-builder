@@ -64,6 +64,14 @@
             
         }
             
+        // Make sure we have a builds directory.
+        if (!fs.existsSync(process.cwd() + '/builds')) {
+            
+            app.logger.info('Creating builds directory');
+            fs.mkdirSync(process.cwd() + '/builds', 511); // 0777 in decimal
+            
+        }
+            
         app.logger.info('Loading config files...');
 
         app.config = {};

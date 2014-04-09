@@ -77,83 +77,98 @@
                           return cb('prepare-failed');
                         }
 
-                        app.actions[key].description = 'Adjusting build numbers for Android';
+                        app.actions[key].description = 'Updating project properties';
 
-                        // Read the AndroidManifest.xml file.
-                        fs.readFile(tmp + 'frontend-mobile/platforms/android/AndroidManifest.xml', {
-                          encoding: 'utf8'
-                        }, function(err, manifest){
+                        // Run the android update tool.
+                        var build = exec('android update project --subprojects --target "Google Inc.:Google APIs:19" --path ' + tmp + 'frontend-mobile/platforms/android/', {
+                          cwd: tmp + 'frontend-mobile/'
+                        }, function(err, stdout, stderr){
 
-                          // Parse the version from the XML file.
-                          var xml = libxmljs.parseXml(manifest),
-                              version = xml.get('//@android:versionCode', { android: 'http://schemas.android.com/apk/res/android' });
+                          if (err) {
+                            app.actions[key].status = 'error';
+                            app.actions[key].description = 'Prepare (cordova prepare android) failed with error: ' + stderr;
+                            return cb('prepare-failed');
+                          }
 
-                          // Let's count how many builds we have.
-                          fs.readdir(process.cwd() +  '/builds', function(err, builds){
+                          app.actions[key].description = 'Adjusting build numbers for Android';
 
-                            version = parseInt(version.value(), 10) + builds.length + 1;
+                          // Read the AndroidManifest.xml file.
+                          fs.readFile(tmp + 'frontend-mobile/platforms/android/AndroidManifest.xml', {
+                            encoding: 'utf8'
+                          }, function(err, manifest){
 
-                            // Update versions.
-                            xml.root().attr({
-                              'android:versionCode': version,
-                              'android:versionName': target.branch
-                            });
+                            // Parse the version from the XML file.
+                            var xml = libxmljs.parseXml(manifest),
+                                version = xml.get('//@android:versionCode', { android: 'http://schemas.android.com/apk/res/android' });
 
-                            // Write out our new manifest.
-                            fs.writeFile(tmp + 'frontend-mobile/platforms/android/AndroidManifest.xml', xml.toString(), {
-                              encoding: 'utf8'
-                            }, function(){
+                            // Let's count how many builds we have.
+                            fs.readdir(process.cwd() +  '/builds', function(err, builds){
 
-                              app.actions[key].description = 'Building Android release APK file';
+                              version = parseInt(version.value(), 10) + builds.length + 1;
 
-                              // Run the Cordova platform build tool.
-                              var build = exec(tmp + 'frontend-mobile/platforms/android/cordova/build --release', {
-                                cwd: tmp + 'frontend-mobile/platforms/android/cordova'
-                              }, function(err, stdout, stderr){
+                              // Update versions.
+                              xml.root().attr({
+                                'android:versionCode': version,
+                                'android:versionName': target.branch
+                              });
 
-                                if (err) {
-                                  app.actions[key].status = 'error';
-                                  app.actions[key].description = 'Build (build --release) failed with error: ' + stderr;
-                                  return cb('build-failed');
-                                }
+                              // Write out our new manifest.
+                              fs.writeFile(tmp + 'frontend-mobile/platforms/android/AndroidManifest.xml', xml.toString(), {
+                                encoding: 'utf8'
+                              }, function(){
 
-                                var unsigned = tmp + 'frontend-mobile/platforms/android/ant-build/DealerInstincts-release-unsigned.apk',
-                                    unaligned = tmp + 'frontend-mobile/platforms/android/ant-build/DealerInstincts-release-unaligned.apk';
+                                app.actions[key].description = 'Building Android release APK file';
 
-                                  // Create a new APK for the unaligned version, just easier to track.
-                                fs.copy(unsigned, unaligned, function(err){
+                                // Run the Cordova platform build tool.
+                                var build = exec(tmp + 'frontend-mobile/platforms/android/cordova/build --release', {
+                                  cwd: tmp + 'frontend-mobile/platforms/android/cordova'
+                                }, function(err, stdout, stderr){
 
                                   if (err) {
                                     app.actions[key].status = 'error';
-                                    app.actions[key].description = 'Copy unsigned APK failed with error: ' + err;
-                                    return cb('copy-unsigned-failed');
+                                    app.actions[key].description = 'Build (build --release) failed with error: ' + stderr;
+                                    return cb('build-failed');
                                   }
 
-                                  app.actions[key].description = 'Signing the APK file';
+                                  var unsigned = tmp + 'frontend-mobile/platforms/android/ant-build/DealerInstincts-release-unsigned.apk',
+                                      unaligned = tmp + 'frontend-mobile/platforms/android/ant-build/DealerInstincts-release-unaligned.apk';
 
-                                  // Sign the APK file.
-                                  var signer = exec('jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -storepass sierra1 -keystore ' + process.cwd() + '/config/keys/di-frontend-mobile.keystore ' + unaligned + ' di_frontend_mobile', function(err, stdout, stderr){
+                                    // Create a new APK for the unaligned version, just easier to track.
+                                  fs.copy(unsigned, unaligned, function(err){
 
                                     if (err) {
                                       app.actions[key].status = 'error';
-                                      app.actions[key].description = 'Error signing the APK file: ' + stderr;
-                                      return cb('jarsigner-failed');
+                                      app.actions[key].description = 'Copy unsigned APK failed with error: ' + err;
+                                      return cb('copy-unsigned-failed');
                                     }
 
-                                    app.actions[key].description = 'Aligning the APK file';
-
-                                    var build = process.cwd() + '/builds/' + key + '.' + version + '.apk';
+                                    app.actions[key].description = 'Signing the APK file';
 
                                     // Sign the APK file.
-                                    var signer = exec('zipalign -v 4 ' + unaligned + ' ' + build, function(err, stdout, stderr){
+                                    var signer = exec('jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -storepass sierra1 -keystore ' + process.cwd() + '/config/keys/di-frontend-mobile.keystore ' + unaligned + ' di_frontend_mobile', function(err, stdout, stderr){
 
                                       if (err) {
                                         app.actions[key].status = 'error';
-                                        app.actions[key].description = 'Error aligning the APK file: ' + stderr;
-                                        return cb('zipalign-failed');
+                                        app.actions[key].description = 'Error signing the APK file: ' + stderr;
+                                        return cb('jarsigner-failed');
                                       }
 
-                                      return cb();
+                                      app.actions[key].description = 'Aligning the APK file';
+
+                                      var build = process.cwd() + '/builds/' + key + '.' + version + '.apk';
+
+                                      // Sign the APK file.
+                                      var signer = exec('zipalign -v 4 ' + unaligned + ' ' + build, function(err, stdout, stderr){
+
+                                        if (err) {
+                                          app.actions[key].status = 'error';
+                                          app.actions[key].description = 'Error aligning the APK file: ' + stderr;
+                                          return cb('zipalign-failed');
+                                        }
+
+                                        return cb();
+
+                                      });
 
                                     });
 

@@ -14,7 +14,6 @@
     var aws = require('aws-sdk'),
         express = require('express'),
         fs = require('fs'),
-        github = require('github'),
         less = require('less-middleware'),
         walker = require('walk'),
         winston = require('winston'),
@@ -183,14 +182,6 @@
 
             // Configure AWS.
             aws.config.update(app.config.aws);
-
-            app.logger.info('Configuring GitHub...');
-
-            // Connect to GitHub.
-            app.github = new github({
-                version: '3.0.0'
-            });
-            app.github.authenticate(app.config.github);
 
             app.logger.info('Adding a ping endpoint...');
 

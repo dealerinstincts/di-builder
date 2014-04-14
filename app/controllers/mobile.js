@@ -11,6 +11,7 @@
 
   var async = require('async'),
       fs = require('fs-extra'),
+      Github = require('github'),
       moment = require('moment'),
       request = require('request'),
       progress = require('request-progress'),
@@ -26,8 +27,14 @@
 
       app.actions[key].description = 'Grabbing ' + repo + ' ' + branch + '\'s tarball';
 
+      // Connect to GitHub.
+      var github = new Github({
+          version: '3.0.0'
+      });
+      github.authenticate(app.config.github);
+
       // Get the link to the tarball
-      app.github.repos.getArchiveLink({
+      github.repos.getArchiveLink({
         user: stack.user,
         repo: repo,
         archive_format: 'tarball',

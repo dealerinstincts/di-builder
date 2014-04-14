@@ -12,6 +12,7 @@
   var async = require('async'),
       aws = require('aws-sdk'),
       fs = require('fs'),
+      Github = require('github'),
       moment = require('moment');
 
   // Export the route function.
@@ -103,8 +104,14 @@
       params.page = 0;
       params.per_page = 5;
 
+      // Connect to GitHub.
+      var github = new Github({
+          version: '3.0.0'
+      });
+      github.authenticate(app.config.github);
+
       // Get the list of tags for our repo.
-      app.github.repos.getTags(params, function(err, tags){
+      github.repos.getTags(params, function(err, tags){
 
         // Render our main UI.
         return res.render('ui', {

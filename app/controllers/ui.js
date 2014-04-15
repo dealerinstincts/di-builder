@@ -27,7 +27,7 @@
       // Loop through all the targets.
       async.map(app.config.targets.stacks, function(stack, cb){
 
-      app.logger.silly('Describing deployments');
+      app.logger.silly('Describing deployments ' + stack.name);
 
         // Get the deployments for all the this stack.
         opsworks.describeDeployments({
@@ -47,7 +47,7 @@
             return cb(null, stack);
           } else {
 
-            app.logger.silly('Describing apps');
+            app.logger.silly('Describing apps ' + stack.name);
 
             // Get the apps for all the this stack.
             opsworks.describeApps({

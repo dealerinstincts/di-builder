@@ -31,7 +31,10 @@
         }, function(err, deployments){
 
           // Return any errors we get.
-          if (err) return cb(err);
+          if (err) {
+            app.logger.error('Error grabing deployments', err);
+            return cb(err);
+          }
 
           // Add the data to the stack.
           stack.deployments = deployments.Deployments;
@@ -46,7 +49,10 @@
             }, function(err, apps){
 
               // Return any errors we get.
-              if (err) return cb(err);
+              if (err) {
+                app.logger.error('Error grabing apps', err);
+                return cb(err);
+              }
 
               // Add the data to the stack.
               stack.branch = apps.Apps[0].AppSource.Revision || 'master';
@@ -64,7 +70,12 @@
         // Get the list of builds.
         fs.readdir(process.cwd() +  '/builds', function(err, builds){
 
-          return cb({
+          if (err) {
+            app.logger.error('Error grabing builds', err);
+            return cb(err);
+          }
+
+          return cb(null, {
             stacks: stacks,
             deployments: Object.keys(app.scheduledDeployments).map(function(key){
               return app.scheduledDeployments[key];
@@ -126,8 +137,8 @@
     // GET /data - Provides a way to refresh data.
     app.get('/data', function(req, res){
 
-      getData(function(data){
-        return res.json(200, data);
+      getData(function(err, data){
+        return res.json(err ? 500 : 200, err || data);
       });
 
     });

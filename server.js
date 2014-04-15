@@ -7,6 +7,9 @@
  * @package di-api
  */
 
+// TODO:
+// - last deployment log should show the one that failed, not the revert one
+
 (function(){
     'use strict';
     

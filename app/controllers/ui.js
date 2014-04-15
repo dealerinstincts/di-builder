@@ -22,8 +22,12 @@
 
       var opsworks = new aws.OpsWorks();
 
+      app.logger.silly('Looping through the stacks');
+
       // Loop through all the targets.
       async.map(app.config.targets.stacks, function(stack, cb){
+
+      app.logger.silly('Describing deployments');
 
         // Get the deployments for all the this stack.
         opsworks.describeDeployments({
@@ -32,7 +36,7 @@
 
           // Return any errors we get.
           if (err) {
-            app.logger.error('Error grabing deployments', err);
+            app.logger.error('Error grabbing deployments', err);
             return cb(err);
           }
 
@@ -43,6 +47,8 @@
             return cb(null, stack);
           } else {
 
+            app.logger.silly('Describing apps');
+
             // Get the apps for all the this stack.
             opsworks.describeApps({
               StackId: stack.id
@@ -50,7 +56,7 @@
 
               // Return any errors we get.
               if (err) {
-                app.logger.error('Error grabing apps', err);
+                app.logger.error('Error grabbing apps', err);
                 return cb(err);
               }
 
@@ -67,11 +73,13 @@
 
       }, function(err, stacks){
 
+        app.logger.silly('Getting builds');
+
         // Get the list of builds.
         fs.readdir(process.cwd() +  '/builds', function(err, builds){
 
           if (err) {
-            app.logger.error('Error grabing builds', err);
+            app.logger.error('Error grabbing builds', err);
             return cb(err);
           }
 

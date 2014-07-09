@@ -93,6 +93,8 @@
                 var values = /(.*?)-(.*(?=-))-([0-9].*)\.([0-9].*)\./g.exec(build),
                     version = /(v.*)/g.exec(values[2]);
 
+                    console.log(values[3]);
+
                 return {
                   type: values[1],
                   filename: build,

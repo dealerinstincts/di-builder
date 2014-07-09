@@ -93,8 +93,6 @@
                 var values = /(.*?)-(.*(?=-))-([0-9].*)\.([0-9].*)\./g.exec(build),
                     version = /(v.*)/g.exec(values[2]);
 
-                    console.log(values);
-
                 return {
                   type: values[1],
                   filename: build,
@@ -122,8 +120,6 @@
     app.get('/', function(req, res){
 
       var params = app.config.targets.tagsFrom;
-      params.page = 0;
-      params.per_page = 5;
 
       // Connect to GitHub.
       var github = new Github({

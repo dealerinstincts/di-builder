@@ -7,7 +7,9 @@ html(lang='en')
   body
     nav.navbar-default.navbar-fixed-top.navbar-inverse
       .container
-        p.navbar-text.pull-left Dealer Instincts Build System
+        p.navbar-text.pull-left
+          img(src='/img/logo.svg', height='20', width='140')
+          |  &nbsp; Build System
         .navbar-form.pull-right
           a#force-refresh.btn.btn-primary.btn-sm(href='#')
             span.fa.fa-icon-only.fa-fw.fa-refresh
@@ -22,48 +24,52 @@ html(lang='en')
             |  Deploy a build
 
           if tags && tags.length
-            .panel-body Choose a revision below (only 5 most recent) to be deployed automatically:
+            .panel-body Choose a revision below to be deployed automatically:
           #tags.list-group
             if tags && tags.length
-              each tag, i in tags
-                label.list-group-item.small(for='branch-' + i) 
-                  input(id='branch-' + i, type='radio', name='branch', value=tag.name, checked=i === 0 ? 'checked' : null)
-                  |  #{tag.name}
-              label.list-group-item.small(for='master') 
-                input#master(type='radio', name='branch', value='master')
-                |  master
+              select#branch(name='branch')
+                each tag, i in tags
+                    option(value=tag.name, selected=i === 0 ? 'selected' : null)
+                      | #{tag.name}
+                  option(value='dev', selected)
+                    | dev
+                  option(value='master')
+                    | master
             else
               label.list-group-item.small.list-group-item-warning Couldn't grab any tags. Please try again later.
 
           if tags && tags.length
-            .panel-body Choose at which time of day (local time) it should be deployed:
+            .panel-body Choose at which time tomorrow (local time) it should be deployed:
             .list-group
               label.list-group-item.small(for='12am') 
                 input#12am(type='radio', name='time', value='0')
                 |  12 AM
               label.list-group-item.small(for='2am') 
-                input#2am(type='radio', name='time', value='2', checked)
+                input#2am(type='radio', name='time', value='2')
                 |  2 AM
               label.list-group-item.small(for='4am') 
                 input#4am(type='radio', name='time', value='4')
                 |  4 AM
               label.list-group-item.small(for='now') 
-                input#now(type='radio', name='time', value='now')
+                input#now(type='radio', name='time', value='now', checked)
                 |  Now
 
-            .panel-body Choose which stacks should be deployed:
-            #stacks-deployment.list-group
-              each stack, i in stacks
-                label.list-group-item.small(for='stack-' + i) 
-                  input(id='stack-' + i, type='checkbox', name='stacks[]', value=stack.name)
-                  .color-block(style='background-color: ' + stack.color + ';')
-                  span  #{stack.name}
+            .panel-body Choose which environment should be deployed:
+            #environment-deployment.list-group
+              label.list-group-item.small(for='environment-staging') 
+                input(id='environment-staging', type='checkbox', name='environments[]', value='staging', checked)
+                .color-block(style='background-color: #2D72B8;')
+                span  Staging
 
-              label.list-group-item.text-info(for='build-mobile') 
-                input#build-mobile(type='checkbox', name='build-mobile', value='1', checked)
-                |  Build mobile version
+              label.list-group-item.small(for='environment-demo') 
+                input(id='environment-demo', type='checkbox', name='environments[]', value='demo')
+                .color-block(style='background-color: #B8852E;')
+                span  Demo
 
-            .panel-body On failure, all stacks will be reverted to the previous version.
+              label.list-group-item.small(for='environment-production') 
+                input(id='environment-production', type='checkbox', name='environments[]', value='production')
+                .color-block(style='background-color: #BA4132;')
+                span  Production
 
             .panel-footer
               button.btn.btn-success.pull-right(type='submit')
@@ -110,46 +116,12 @@ html(lang='en')
             table#deployments.table.table-striped
               thead
                 tr
-                  th Stack
+                  th Environment
                   th Branch
                   th.text-center Mobile
                   th Scheduled For
                   th
               tbody
-
-      .col-xs-12.col-md-7.pull-left
-        #builds-loading.loading
-          .loader
-            span.fa.fa-icon-only.fa-fw.fa-spinner.fa-spin
-          form.panel.panel-default(name='mobile', action='/mobile/build', method='post')
-            .panel-heading
-              span.fa.fa-icon-only.fa-fw.fa-mobile
-              |  Mobile Builds
-            .panel-body
-              | Below are the 
-              strong 10 most recent 
-              | mobile builds from mobile enabled repositories.
-            table#builds.table.table-striped
-              thead
-                tr
-                  th Stack
-                  th Branch
-                  th.text-center Version
-                  th Created At
-                  th.text-center
-                    span.fa.fa-icon-only.fa-fw.fa-download
-              tbody
-            .panel-body.empty
-              .label.label-warning No mobile builds
-            .panel-footer
-              button#build-now.btn.btn-default.pull-right(type='submit')
-                span.fa.fa-icon-only.fa-fw.fa-cog
-                |  Build Now
-              small
-                | Building all mobile enabled repositories will create APKs from the 
-                strong master 
-                | branch.
-              .clearfix
 
     #footer.navbar
       .container

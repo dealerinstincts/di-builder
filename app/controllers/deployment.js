@@ -1,6 +1,6 @@
 /**
- * mobile.js
- * Provides build functionalities for mobile.
+ * deployment.js
+ * Provides deployment functionalities.
  * 
  * @author  Jason Valdron <jason@dealerinstincts.com>
  * @package di-api
@@ -11,160 +11,190 @@
 
   var async = require('async'),
       aws = require('aws-sdk'),
+      bower = require('bower'),
+      fs = require('fs-extra'),
+      Github = require('github'),
+      npm = require('npm'),
       moment = require('moment'),
-      schedule = require('node-schedule');
+      schedule = require('node-schedule'),
+      request = require('request'),
+      progress = require('request-progress'),
+      Targz = require('tar.gz');
 
   // Export the route function.
   module.exports = function(app){
 
-    var hadErrors = false;
+    // Downloads a tarball from a repo and extracts it.
+    var downloadAndExtractTarball = function(key, stack, repo, branch, cb){
 
-    // Checks if any other deployment failed, if so, we'll have to wait until all
-    // deployments are done to deploy back the old version.
-    var checkIfErrors = function(stacks, cb){
+      var tmp = process.cwd() + '/tmp/' + key + '/';
 
-      if (hadErrors) {
+      app.actions[key].description = 'Grabbing ' + repo + ' ' + branch + '\'s tarball';
 
-        // Check if we're still deploying.
-        var deploying = false;
-        app.config.targets.stacks.forEach(function(stack){
-          if (stack.deploying) deploying = true;
+      // Connect to GitHub.
+      var github = new Github({
+          version: '3.0.0'
+      });
+      github.authenticate(app.config.github);
+
+      // Get the link to the tarball
+      github.repos.getArchiveLink({
+        user: stack.user,
+        repo: repo,
+        archive_format: 'tarball',
+        ref: ~[ 'master', 'dev' ].indexOf(branch) ? branch : 'refs/tags/' + branch
+      }, function(err, archive){
+
+        // Create a request to grab the tarball.
+        progress(request(archive.meta.location)).on('progress', function(state){
+
+          app.actions[key].description = 'Grabbing ' + repo + ' ' + branch + '\'s tarball' + (state.percent ? ' (' + state.percent + '%)' : '');
+
+        }).on('error', function(err){
+
+          app.actions[key].status = 'error';
+          app.actions[key].description = 'Failed to download /' + stack.repo + '/tarball/' + branch + ' tarball';
+          return cb('error-download-tarball');
+
+        }).pipe(fs.createWriteStream(tmp + 'tmp.tar.gz')).on('close', function(){
+
+          app.actions[key].description = 'Deflating ' + repo + ' ' + branch + '\'s tarball';
+
+          // Extract the tarball.
+          new Targz().extract(tmp + 'tmp.tar.gz', tmp, function(err){
+
+            if (err) {
+              app.actions[key].status = 'error';
+              app.actions[key].description = 'Failed to deflate ' + repo + ' tarball';
+              return cb('error-download-tarball');
+            }
+
+            // We don't need the tarball anymore.
+            fs.unlink(tmp + 'tmp.tar.gz', function(){
+
+              // All done downloading and extracting this tarball.
+              return cb(archive);
+
+            });
+
+          });
+
         });
 
-        // We're still deploying, let's wait until another stack is done.
-        if (deploying) return cb();
-
-        hadErrors = false;
-
-        // We're no longer deploying, let's revert!
-        methods.deploy(stacks, null, cb, true);
-
-      } else {
-        return cb();
-      }
+      });
 
     };
 
     var methods = {
-      deploy: function(stacks, branch, cb, revert){
-
-        var opsworks = new aws.OpsWorks();
+      deploy: function(environments, branch, cb){
 
         // Build all the targets that requires us to be built.
         async.each(app.config.targets.stacks, function(stack, cb){
 
-          // Try to revert to the previous branch if specified.
-          if (revert) branch = stack.previousBranch || branch;
-
-          if (stacks && stacks.length && stacks.indexOf(stack.name) === -1) return cb();
+          if (environments && environments.length && environments.indexOf(stack.env) === -1) return cb();
 
           var key = 'deployment-' + stack.name + '-' + branch + '-' + Date.now();
 
           // Start this action.
           app.actions[key] = {
-            action: (revert ? 'Reverting to ' : 'Deploying ') + branch + ' branch on ' + stack.name + ' stack',
+            action: 'Deploying ' + branch + ' branch on ' + stack.name + ' stack',
             status: 'inProcess'
           };
 
-          app.actions[key].description = 'Getting list of apps on the stack';
+          var tmp = process.cwd() + '/tmp/' + key + '/';
 
-          // Update the deploying flag.
-          app.config.targets.stacks.forEach(function(entry){
-            if (entry.name === stack.name) entry.deploying = true;
-          });
+          // Create temporary folder for storing things for this operation.
+          fs.mkdir(tmp, function(){
 
-          // Get the apps for all the this stack.
-          opsworks.describeApps({
-            StackId: stack.id
-          }, function(err, apps){
+            // Download the branch tarball.
+            downloadAndExtractTarball(key, stack, stack.repo, branch, function(){
 
-            app.actions[key].description = 'Configuring the app to use the ' + branch + ' branch';
+              // Attempt to find the folder we need.
+              fs.readdir(tmp, function(err, files){
 
-            // Update the branch on our stack on OpsWork.
-            opsworks.updateApp({
-              AppId: apps.Apps[0].AppId,
-              AppSource: {
-                Revision: branch
-              }
-            }, function(err, data){
+                files.forEach(function(file){
+                  if (~file.indexOf('di-')) fs.renameSync(tmp + file, tmp + 'src');
+                });
 
-              if (err) {
-                app.actions[key].status = 'error';
-                app.actions[key].description = 'Failed to update branch on app';
-                return cb('failed-update-branch');
-              }
+                async.series([
 
-              app.actions[key].description = 'Sending deployment command to OpsWorks';
+                  function(done){
 
-              // Send the deployment command.
-              opsworks.createDeployment({
-                StackId: stack.id,
-                AppId: apps.Apps[0].AppId,
-                Command: {
-                  Name: 'deploy'
-                }
-              }, function(err, deployment){
+                    app.actions[key].description = 'Running npm install for ' + branch + ' branch on ' + stack.name + ' stack';
 
-                if (err) {
-                  app.actions[key].status = 'error';
-                  app.actions[key].description = 'Failed to send deployment command';
-                  return cb('failed-deploy-branch');
-                }
+                    // Run npm install.
+                    npm.load(JSON.parse(fs.readFileSync(tmp + 'src/package.json', {
+                      encoding: 'utf8'
+                    })), function(){
 
-                app.actions[key].description = 'Waiting for reply from OpsWorks';
+                      npm.prefix = tmp + 'src/';
 
-                var watch = setInterval(function(){
+                      npm.commands.install(function(err, data){
 
-                  // Check if we have an update in our deployment status.
-                  opsworks.describeDeployments({
-                    DeploymentIds: [ deployment.DeploymentId]
-                  }, function(err, deployments){
+                        if (err) return done(err); 
+                        return done();
 
-                    if (!(deployments && deployments.Deployments && deployments.Deployments.length)) return;
-
-                    var deployment = deployments.Deployments[0];
-
-                    if (deployment.Status !== 'running') {
-
-                      clearInterval(watch);
-                    
-                      // Update the existing branch value on the stack.
-                      app.config.targets.stacks.forEach(function(entry){
-                        if (entry.name === stack.name) {
-                          entry.previousBranch = entry.branch;
-                          entry.branch = branch;
-                          entry.deploying = false;
-                        }
                       });
 
-                      if (deployment.Status === 'failed') {
+                    });
 
-                        hadErrors = true;
-                        app.actions[key].status = 'error';
-                        app.actions[key].description = 'Failed to ' + (revert ? 'revert' : 'deploy') + ', see deployment log for more details';
+                  },
 
-                        if (revert) return cb('failed-revert');
+                  function(done){
 
-                        checkIfErrors(stacks, function(){
-                          return cb('failed-deployment');
-                        });
+                    if (~stack.name.indexOf('frontend')) {
 
-                      } else {
+                      app.actions[key].description = 'Running bower install for ' + branch + ' branch on ' + stack.name + ' stack';
 
-                        app.actions[key].status = 'completed';
-                        app.actions[key].completedAt = moment();
-                        app.actions[key].description = null;
+                      // Run bower install.
+                      bower.config.cwd = tmp + 'src/';
+                      bower.commands.install().on('error', done).on('end', function(){
+                        return done();
+                      });
 
-                        // All done deploying this target.
-                        checkIfErrors(stacks, cb);
-
-                      }
-
+                    } else {
+                      return done();
                     }
+
+                  }
+
+                ], function(err){
+
+                  if (err) {
+                    app.actions[key].status = 'error';
+                    app.actions[key].description = 'Failed to run npm/bower.';
+                    console.log(err);
+                    return cb('error-npm-bower');
+                  }
+
+                  app.actions[key].description = 'Compiling assets for ' + branch + ' branch on ' + stack.name + ' stack';
+
+                  // Run the grunt deployment.
+                  var grunt  = require('child_process').exec('/usr/bin/grunt deploy --target=' + stack.env + ' --tag=' + branch + ' --allow-root', {
+                    cwd: tmp + 'src/'
+                  }, function(err, stdout, stderr){
+
+                    if (err) {
+                      app.actions[key].status = 'error';
+                      app.actions[key].description = 'Failed to run grunt: ' + stdout;
+                      return cb('error-grunt');
+                    }
+
+                    // Completely delete the temp folder we used.
+                    //fs.remove(tmp, function(){
+
+                      app.actions[key].status = 'completed';
+                      app.actions[key].completedAt = moment();
+                      app.actions[key].description = null;
+
+                      // All done deploying this part.
+                      return cb();
+
+                    //});
 
                   });
 
-                }, 5000);
+                });
 
               });
 
@@ -183,13 +213,8 @@
       res.redirect('/');
 
       var deploy = function(options){
-        if (options.stacks && options.stacks.length) {
-          methods.deploy(options.stacks, options.branch);
-        }
-
-        if (options['build-mobile']) {
-          var mobile = require(process.cwd() + '/app/controllers/mobile')(app);
-          mobile.build(false, options.branch);
+        if (options.environments && options.environments.length) {
+          methods.deploy(options.environments, options.branch);
         }
       };
 

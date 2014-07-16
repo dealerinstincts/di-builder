@@ -31,7 +31,7 @@ html(lang='en')
                 each tag, i in tags
                     option(value=tag.name, selected=i === 0 ? 'selected' : null)
                       | #{tag.name}
-                  option(value='dev', selected)
+                  option(value='dev')
                     | dev
                   option(value='master')
                     | master
@@ -51,13 +51,13 @@ html(lang='en')
                 input#4am(type='radio', name='time', value='4')
                 |  4 AM
               label.list-group-item.small(for='now') 
-                input#now(type='radio', name='time', value='now', checked)
+                input#now(type='radio', name='time', value='now')
                 |  Now
 
             .panel-body Choose which environment should be deployed:
             #environment-deployment.list-group
               label.list-group-item.small(for='environment-staging') 
-                input(id='environment-staging', type='checkbox', name='environments[]', value='staging', checked)
+                input(id='environment-staging', type='checkbox', name='environments[]', value='staging')
                 .color-block(style='background-color: #2D72B8;')
                 span  Staging
 

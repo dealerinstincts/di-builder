@@ -181,7 +181,7 @@
                     }
 
                     // Completely delete the temp folder we used.
-                    //fs.remove(tmp, function(){
+                    fs.remove(tmp, function(){
 
                       app.actions[key].status = 'completed';
                       app.actions[key].completedAt = moment();
@@ -190,7 +190,7 @@
                       // All done deploying this part.
                       return cb();
 
-                    //});
+                    });
 
                   });
 

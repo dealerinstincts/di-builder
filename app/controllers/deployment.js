@@ -170,7 +170,7 @@
                   app.actions[key].description = 'Compiling assets for ' + branch + ' branch on ' + stack.name + ' stack';
 
                   // Run the grunt deployment.
-                  var grunt  = require('child_process').exec('/usr/bin/grunt deploy --target=' + stack.env + ' --tag=' + branch + ' --allow-root', {
+                  var grunt  = require('child_process').exec('/usr/bin/grunt build deploy --target=' + stack.env + ' --tag=' + branch + ' --allow-root', {
                     cwd: tmp + 'src/'
                   }, function(err, stdout, stderr){
 

@@ -175,6 +175,7 @@
                   }, function(err, stdout, stderr){
 
                     if (err) {
+                      console.log(err, stderr);
                       app.actions[key].status = 'error';
                       app.actions[key].description = 'Failed to run grunt: ' + stdout;
                       return cb('error-grunt');

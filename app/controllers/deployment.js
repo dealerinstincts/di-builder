@@ -171,7 +171,8 @@
 
                   // Run the grunt deployment.
                   var grunt  = require('child_process').exec('/usr/bin/grunt build deploy --target=' + stack.env + ' --tag=' + branch + ' --allow-root', {
-                    cwd: tmp + 'src/'
+                    cwd: tmp + 'src/',
+                    maxBuffer: 10000 * 1024
                   }, function(err, stdout, stderr){
 
                     if (err) {

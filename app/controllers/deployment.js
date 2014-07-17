@@ -148,7 +148,8 @@
 
                       // Run bower install.
                       bower.config.cwd = tmp + 'src/';
-                      bower.commands.install().on('error', done).on('end', function(){
+                      bower.config.directory = '/app/assets/js/bower/';
+                      bower.commands.install().on('error', done).on('end', function(end){
                         return done();
                       });
 

@@ -31,7 +31,7 @@
             new winston.transports.Console({
                 colorize: true,
                 timestamp: true,
-                level: 'warning'
+                level: 'info'
             })
         ];
         var exceptionHandlers = [

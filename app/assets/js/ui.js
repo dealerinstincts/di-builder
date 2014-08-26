@@ -112,7 +112,7 @@
           var deployment = $('<tr />');
 
           // Add all the fields.
-          deployment.append($('<td />').text(this.stacks ? this.stacks.join(', ') : 'None'))
+          deployment.append($('<td />').text(this.environments ? this.environments.join(', ') : 'None'))
                .append($('<td />').text(this.branch))
                .append($('<td class="text-center" />').append($('<span class="fa fa-icon-only fa-fw fa-' + (this['build-mobile'] ? 'check' : 'times') + '" />')))
                .append($('<td />').text(this.dateTime))
